@@ -69,14 +69,16 @@
           <div class="field" v-if="path.includes('edit')">
             <label for="">{{ name }}</label>
             <div class="draft" v-if="name == 'draft'">
-             
-              <textarea v-model="item[name]"   :id="id" />
+              <textarea v-bind:value="item[name]" @input="valChg(name, id)" :id="id + name" />
               <button @click="publish(id, child)">publish</button>
             </div>
             <input
               v-else
-         v-bind:value="item" v-on:input="item = $event"
+              v-bind:value="item[name]"
+              @input="valChg(name, id)"
+              :id="id + name" 
               :type="name == 'color' ? 'color' : 'text'"
+              
             />
           </div>
         </div>
@@ -123,17 +125,20 @@ export default {
     prjid: { type: String },
     path: { type: String },
   },
- 
 
   mounted() {
     if (this.id) {
-      var elem = document.getElementById(this.id);
+      var elem = document.getElementById(this.id + "draft");
       if (elem) {
         elem.style.height = elem.scrollHeight + "px";
       }
     }
   },
   methods: {
+    valChg(name, id) {
+      // eslint-disable-next-line
+      this.item[name] = document.getElementById(id + name).value;
+    },
     publish(id, value) {
       axios
         .post(vars.url + "/cms/publish/", {
