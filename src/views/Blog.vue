@@ -35,7 +35,8 @@
               @input="syncInner(b)"
               :noHtml="true"
               @keydown.tab="checkTab(b, $event)"
-              @paste="checkPaste($event)"
+              @keydown.backspace="checkBackspace(b)"
+                            @paste="checkPaste($event)"
             />
           </div>
           <hr class="underline" />
@@ -93,6 +94,12 @@ export default {
           this.blog.draftbullets = [{ data: "", isEditable: true }];
         }
         this.done = true;
+        setTimeout(() => {
+          for (var b in this.blog.draftbullets) {
+            document.getElementById("li-" + b).innerHTML =
+              this.blog.draftbullets[b].data;
+          }
+        }, 50);
       })
       .catch((error) => {
         console.log(error);
@@ -100,7 +107,9 @@ export default {
   },
   methods: {
     syncInner(b) {
-this.blog.draftbullets[b].data = document.getElementById("li-" + b).innerHTML
+      this.blog.draftbullets[b].data = document.getElementById(
+        "li-" + b
+      ).innerHTML;
     },
     checkTab(b, e) {
       console.log("check on bullet b:", b);
@@ -112,6 +121,12 @@ this.blog.draftbullets[b].data = document.getElementById("li-" + b).innerHTML
       }
       if (b == this.blog.draftbullets.length - 1) {
         this.newBullet(b);
+      }
+    },
+    checkBackspace(b) {
+      if (this.blog.draftbullets[b].data == "") {
+        this.blog.draftbullets.splice(b, 1);
+        setTimeout(this.setFocus(b - 1), 50);
       }
     },
     newBullet(b) {
@@ -177,7 +192,7 @@ this.blog.draftbullets[b].data = document.getElementById("li-" + b).innerHTML
 }
 
 #divider {
-  margin-top: -50px;
+  margin-top: -40px;
   &.flipped {
     margin-top: -80px;
     transform: scaleY(-1);
