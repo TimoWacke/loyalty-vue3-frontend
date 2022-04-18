@@ -6,6 +6,7 @@ import Login from '@/views/Login'
 import SignUp from '../views/SignUp.vue'
 import Site from '@/views/Site'
 import Paper from '@/views/Blog'
+import Journal from '@/components/Journal'
 import Reset from '@/views/Reset'
 import Flyby from '@/views/Flyby'
 import axios from 'axios'
@@ -24,10 +25,15 @@ let baseRoutes = [
     path: '/website',
     name: 'Website',
     component: Site
-  },{
+  }, {
     path: '/paper',
     name: 'Paper',
     component: Paper
+  }
+  , {
+    path: '/journal',
+    name: 'Journal',
+    component: Journal
   },
   {
     path: '/documents',
@@ -87,16 +93,16 @@ router.beforeEach(async (to, from, next) => {
     await axios.post(vars.url + '/token', { token: VueCookie.get('session_token') })
       .then((response) => {
         console.log("to name:", to.name)
-        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home'))) {
+        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home' && to.name != 'Journal'))) {
           App.store['user'] = response.data
           if (response.data.features.includes("Admin")) {
             next({ name: 'Admin' })
           } else {
-            if(response.data.edit.address.street.length > 4 && response.data.edit.address.postcode.length > 3 && response.data.edit.address.city.length > 2 ) {
+            if (response.data.edit.address.street.length > 4 && response.data.edit.address.postcode.length > 3 && response.data.edit.address.city.length > 2) {
               console.log("try paper")
-              next({ name: 'Paper'})
+              next({ name: 'Paper' })
             } else {
-            next({ name: 'Home' })
+              next({ name: 'Home' })
             }
           }
         } else if (!response.data && to.name !== 'Login' && to.name !== 'Flyby' && to.name !== 'SignUp') {

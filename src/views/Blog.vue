@@ -5,19 +5,51 @@
       <h3 id="onmind">What's on your mind {{ aps["user"].edit.forename }}?</h3>
       <br id="onmindbr" />
       <div id="editor">
-        <input
-          class="h2"
-          type="text"
-          id="blogtitle"
-          v-model="blog.title"
-          v-autowidth="{
-            maxWidth: '100%',
-            minWidth: '0px',
-            comfortZone: 0,
-          }"
-        />
-        <input type="date" v-if="this.$root.formatDate(blog.customdate) != blog.title" v-model="formdate" @input="blog.customdate = new Date(formdate)" />
-        {{blog.customdate}}
+        <div class="hori">
+          <input
+            class="h2"
+            type="text"
+            id="blogtitle"
+            v-model="blog.title"
+            v-autowidth="{
+              maxWidth: '100%',
+              minWidth: '0px',
+              comfortZone: 0,
+            }"
+          />
+          <input
+            type="date"
+            v-if="this.$root.formatDate(blog.customdate) != blog.title"
+            v-model="formdate"
+            @input="blog.customdate = new Date(formdate)"
+          />
+          <label class="toggle" for="uniqueID">
+            <input
+              type="checkbox"
+              class="toggle__input"
+              id="uniqueID"
+              v-model="blog.ispublic"
+            />
+            <span class="toggle-track">
+              <span class="toggle-indicator">
+                <!-- 	This check mark is optional	 -->
+                <span class="checkMark">
+                  <svg
+                    viewBox="0 0 24 24"
+                    id="ghq-svg-check"
+                    role="presentation"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
+                    ></path>
+                  </svg>
+                </span>
+              </span>
+            </span>
+            {{blog.ispublic ? "public" : "private"}}
+          </label>
+        </div>
         <div
           class="bullet"
           @click.self="setFocus(b)"
@@ -61,7 +93,11 @@
         </div>
         <hr class="breakline" />
       </div>
-      <Journal :redirect="editurl" :usr_prj_id="'self'" />
+      <Journal
+        :redirect="editurl"
+        :usr_prj_id="'self'"
+        :exclude="this.blog._id"
+      />
     </div>
   </div>
 </template>
@@ -113,7 +149,10 @@ export default {
         if (this.blog.draftbullets.length == 0) {
           this.blog.draftbullets = [{ data: "" }];
         }
-        this.formdate = this.$root.formatDate(this.blog.customdate, "YYYY-MM-DD");
+        this.formdate = this.$root.formatDate(
+          this.blog.customdate,
+          "YYYY-MM-DD"
+        );
         this.done = true;
         setTimeout(this.initialise, 50);
       })
@@ -359,6 +398,93 @@ div.bullet {
 @-webkit-keyframes blink-animation {
   to {
     visibility: hidden;
+  }
+}
+
+$toggle-indicator-size: 15px; // changing this number will resize the whole toggle
+$track-height: $toggle-indicator-size + 7;
+$track-width: $toggle-indicator-size * 2.5;
+$highContrastModeSupport: solid 2px transparent;
+
+
+$mid: #0f476f;
+$speed: 0.5s;
+
+$track-border: $mid;
+$track-background: #fff;
+$focus-ring: 0px 0px 0px 0px $mid;
+
+// Toggle specific styles
+.toggle {
+  border-radius: 100px;
+  display: flex;
+  font-weight: 600;
+  margin: 0;
+  height: min-content;
+
+}
+
+// Since we can't style the checkbox directly, we "hide" it so we can draw the toggle.
+.toggle__input {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+
+
+  &:disabled + .toggle-track {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.toggle-track {
+  background: $track-background;
+  border: 1px solid $track-border;
+  border-radius: 100px;
+  cursor: pointer;
+  display: flex;
+  height: $track-height;
+  margin-right: 12px;
+  position: relative;
+  width: $track-width;
+}
+
+.toggle-indicator {
+  align-items: center;
+  background: transparent;
+  border: 2px solid $mid;
+  border-radius: $toggle-indicator-size;
+  bottom: 1px;
+  display: flex;
+  height: $toggle-indicator-size;
+  justify-content: center;
+  left: 1.5px;
+  outline: $highContrastModeSupport;
+  position: absolute;
+  transition: $speed;
+  width: $toggle-indicator-size;
+}
+
+// The check mark is optional
+.checkMark {
+  fill: #fff;
+  height: $toggle-indicator-size + 4px;
+  width: $toggle-indicator-size;
+  opacity: 0;
+  transition: opacity $speed ease-in-out;
+}
+
+.toggle__input:checked + .toggle-track .toggle-indicator {
+  background: $mid;
+  transform: translateX($track-width - $track-height);
+
+  .checkMark {
+    opacity: 1;
+    transition: opacity $speed ease-in-out;
   }
 }
 </style>

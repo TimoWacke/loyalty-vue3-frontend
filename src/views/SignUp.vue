@@ -95,7 +95,7 @@ export default {
         .then((response) => {
           if (response.data == "success") {
             document.getElementById("card").innerHTML =
-              "Klicke auf den Bestätigungslink in deinem Email-Postfach";
+              "Click on the link we sent to your e-mail address for verification which logs you in right away.";
           }
           me.error = response.data;
           return;
