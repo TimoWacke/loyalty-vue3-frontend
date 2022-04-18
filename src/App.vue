@@ -72,7 +72,7 @@ $secondary: #ff049b;
   align-items: center;
 }
 
-#content,
+#content, #iframe,
 .sign-page {
   font-family: "Segoe UI";
   color: $primary;
