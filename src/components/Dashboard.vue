@@ -2,7 +2,7 @@
   <div id="dashboard">
     <div id="dashboard-div" class="hiddendash">
       <div class="sideboard column gradient">
-        <VerticalIntegrations />
+        <VerticalIntegrations variant="dark"/>
         <div id="sections">
           <div v-for="sect in features" :key="sect">
             <a

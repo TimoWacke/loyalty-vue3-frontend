@@ -25,8 +25,14 @@ export default {
   mounted() {
     if (this.variant == "light") {
       document.getElementById("banner").classList.add(this.variant);
+      document.getElementById("banner").classList.remove("dark");
       document.getElementById("logo-l").style = "display: block";
       document.getElementById("logo-d").style = "display: none";
+    } else {
+      document.getElementById("banner").classList.add(this.variant);
+      document.getElementById("banner").classList.remove("light");
+      document.getElementById("logo-l").style = "display: none";
+      document.getElementById("logo-d").style = "display: block";
     }
   },
 };
@@ -57,7 +63,7 @@ export default {
   margin-left: 8px;
 }
 
-  #dashboard #banner {
+#dashboard #banner {
   @media only screen and (min-width: 700px) {
     padding: 0px 10%;
 
@@ -66,8 +72,8 @@ export default {
       justify-content: space-between;
     }
   }
-   @media only screen and (max-width: 700px) {
-   transform: translatey(80vh);
-   }
+  @media only screen and (max-width: 700px) {
+    transform: translatey(80vh);
+  }
 }
 </style>
