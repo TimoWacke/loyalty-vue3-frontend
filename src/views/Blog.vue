@@ -4,7 +4,7 @@
     <div v-if="done" id="content" class="site blog">
       <h3>What's on your mind {{ aps["user"].edit.forename }}?</h3>
       <br />
-      <div id="editor" :key="keyCode">
+      <div id="editor">
         <input
           class="h2"
           type="text"
@@ -36,12 +36,20 @@
               :noHtml="true"
               @keydown.tab="checkTab(b, $event)"
               @keydown.backspace="checkBackspace(b)"
-                            @paste="checkPaste($event)"
+              @paste="checkPaste($event)"
             />
           </div>
           <hr class="underline" />
         </div>
       </div>
+      <div id="addbullet" class="plus bullet" @click="newBullet(-1)">
+        <div class="hori">
+          <div class="dot-wrp">
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+
       <Saver class="blog" :toserve="[blog]" :nodisplay="true" />
 
       <button class="inputnone" id="send"></button>
@@ -75,7 +83,6 @@ export default {
       aps: App.store,
       blog: {},
       done: false,
-      keyCode: 0,
     };
   },
   components: {
@@ -94,12 +101,7 @@ export default {
           this.blog.draftbullets = [{ data: "", isEditable: true }];
         }
         this.done = true;
-        setTimeout(() => {
-          for (var b in this.blog.draftbullets) {
-            document.getElementById("li-" + b).innerHTML =
-              this.blog.draftbullets[b].data;
-          }
-        }, 50);
+        setTimeout(this.initialise, 50);
       })
       .catch((error) => {
         console.log(error);
@@ -110,6 +112,24 @@ export default {
       this.blog.draftbullets[b].data = document.getElementById(
         "li-" + b
       ).innerHTML;
+      document.getElementById("addbullet").classList.remove("compr");
+      if (
+        this.blog.draftbullets[this.blog.draftbullets.length - 1].data == ""
+      ) {
+        document.getElementById("addbullet").classList.add("compr");
+      }
+    },
+    initialise() {
+      for (var b in this.blog.draftbullets) {
+        document.getElementById("li-" + b).innerHTML =
+          this.blog.draftbullets[b].data;
+      }
+      document.getElementById("addbullet").classList.remove("compr");
+      if (
+        this.blog.draftbullets[this.blog.draftbullets.length - 1].data == ""
+      ) {
+        document.getElementById("addbullet").classList.add("compr");
+      }
     },
     checkTab(b, e) {
       console.log("check on bullet b:", b);
@@ -119,26 +139,40 @@ export default {
         }
         return;
       }
-      if (b == this.blog.draftbullets.length - 1) {
-        this.newBullet(b);
+      if (this.blog.draftbullets.length - 1 == b) {
+        this.newBullet(b + 1);
+      } else if (this.blog.draftbullets[b + 1].data != "") {
+        console.log("new bullet");
+        this.newBullet(b + 1);
       }
     },
     checkBackspace(b) {
-      if (this.blog.draftbullets[b].data == "") {
-        this.blog.draftbullets.splice(b, 1);
-        setTimeout(this.setFocus(b - 1), 50);
+      if (this.blog.draftbullets[b].data == "" && b > 0) {
+        this.deleteBullet(b);
       }
     },
     newBullet(b) {
-      this.blog.draftbullets.splice(b + 1, 0, { data: "", isEditable: true });
-      setTimeout(this.setFocus(b + 1), 50);
+      if (b == -1) {
+        b = this.blog.draftbullets.length;
+      }
+      this.blog.draftbullets.splice(b, 0, { data: "", isEditable: true });
+      setTimeout(this.initialise, 25);
+      setTimeout(this.setFocus(b), 100);
+    },
+    deleteBullet(b) {
+      this.blog.draftbullets.splice(b, 1);
+      setTimeout(this.initialise, 25);
+      setTimeout(this.setFocus(b - 1), 50);
     },
     setFocus(b) {
-      document.getElementById("li-" + b).focus();
-    },
+      var bullet = document.getElementById("li-" + b);
+      bullet.focus();
+
+},
     toggleDivider() {
       document.getElementById("divider").classList.toggle("flipped");
       document.getElementById("editor").classList.toggle("compr");
+      document.getElementById("addbullet").classList.toggle("compr");
     },
     checkPaste(e) {
       // cancel paste
@@ -192,7 +226,7 @@ export default {
 }
 
 #divider {
-  margin-top: -40px;
+  margin-top: -50px;
   &.flipped {
     margin-top: -80px;
     transform: scaleY(-1);
@@ -281,6 +315,19 @@ hr.breakline {
     vertical-align: baseline;
     width: calc(100% - 40px);
     outline: none;
+  }
+}
+
+div.plus.bullet {
+  cursor: pointer;
+  margin-top: -5px !important;
+  margin-bottom: -30px !important;
+  opacity: 40%;
+  &.compr {
+    display: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    display: none;
   }
 }
 
