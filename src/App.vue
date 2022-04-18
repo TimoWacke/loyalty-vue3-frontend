@@ -14,7 +14,48 @@ export default {
       }
     });
   },
-  methods: {},
+  methods: {
+    formatDate(date, format) {
+      var dat = new Date(date);
+      if (format) {
+        format = format.replace("YYYY", dat.getFullYear());
+        format = format.replace("YY", dat.getYear());
+        format = format.replace(
+          "MM",
+          (dat.getMonth() + 1 < 10 ? "0" : "") + (dat.getMonth() + 1)
+        );
+        format = format.replace("M", dat.getMonth() + 1);
+        format = format.replace(
+          "DD",
+          (dat.getDate() < 10 ? "0" : "") + dat.getDate()
+        );
+        format = format.replace("D", dat.getDate());
+        return format;
+      }
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const day = dat.getDate();
+      var sib = "th";
+      if (day < 4) {
+        sib = "rd";
+        if (day < 3) sib = "nd";
+        if (day == 1) sib = "st";
+      }
+      return day + sib + " " + months[dat.getMonth()] + " " + dat.getFullYear();
+    },
+  },
 };
 </script>
 
@@ -228,7 +269,8 @@ form {
   padding: 0;
   &.zontal {
     align-items: center;
-    input, select {
+    input,
+    select {
       width: 100%;
     }
   }
