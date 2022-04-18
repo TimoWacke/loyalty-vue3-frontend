@@ -2,8 +2,8 @@
   <div class="hori highlvl">
     <Dashboard />
     <div v-if="done" id="content" class="site blog">
-      <h3>What's on your mind {{ aps["user"].edit.forename }}?</h3>
-      <br />
+      <h3 id="onmind">What's on your mind {{ aps["user"].edit.forename }}?</h3>
+      <br id="onmindbr" />
       <div id="editor">
         <input
           class="h2"
@@ -16,7 +16,8 @@
             comfortZone: 0,
           }"
         />
-
+        <input type="date" v-if="this.$root.formatDate(blog.customdate) != blog.title" v-model="formdate" @input="blog.customdate = new Date(formdate)" />
+        {{blog.customdate}}
         <div
           class="bullet"
           @click.self="setFocus(b)"
@@ -31,8 +32,8 @@
               :id="'li-' + b"
               class="content-wrp"
               tag="div"
-              :contenteditable="blog.draftbullets[b].isEditable"
               @input="syncInner(b)"
+              :contenteditable="true"
               :noHtml="true"
               @keydown.tab="checkTab(b, $event)"
               @keydown.backspace="checkBackspace(b)"
@@ -60,6 +61,7 @@
         </div>
         <hr class="breakline" />
       </div>
+      <Journal :redirect="editurl" :usr_prj_id="'self'" />
     </div>
   </div>
 </template>
@@ -74,6 +76,7 @@ import vars from "@/assets/vars";
 import VueCookie from "vue-cookies";
 import Dashboard from "@/components/Dashboard.vue";
 import Saver from "@/components/Saver.vue";
+import Journal from "@/components/Journal.vue";
 
 import axios from "axios";
 export default {
@@ -83,23 +86,34 @@ export default {
       aps: App.store,
       blog: {},
       done: false,
+      editurl: "",
+      formdate: "",
     };
   },
   components: {
     Dashboard,
     Saver,
+    Journal,
   },
   async mounted() {
+    var selfurl = window.location.href;
+    var match = selfurl.match(/^([^\s?]+)\??([0-9a-zA-Z]*)$/);
+    this.editurl = match[1];
+    var openid = match[2];
+    window.history.pushState({ path: this.editurl }, "", this.editurl);
+
     await axios
       .post(vars.url + "/cms/blog", {
         token: VueCookie.get("session_token"),
+        id: openid,
       })
       .then((response) => {
         this.blog = response.data;
         this.blog["edit"] = true;
         if (this.blog.draftbullets.length == 0) {
-          this.blog.draftbullets = [{ data: "", isEditable: true }];
+          this.blog.draftbullets = [{ data: "" }];
         }
+        this.formdate = this.$root.formatDate(this.blog.customdate, "YYYY-MM-DD");
         this.done = true;
         setTimeout(this.initialise, 50);
       })
@@ -167,9 +181,11 @@ export default {
     setFocus(b) {
       var bullet = document.getElementById("li-" + b);
       bullet.focus();
-
-},
+    },
     toggleDivider() {
+      document.getElementById("onmind").classList.toggle("none");
+
+      document.getElementById("onmindbr").classList.toggle("none");
       document.getElementById("divider").classList.toggle("flipped");
       document.getElementById("editor").classList.toggle("compr");
       document.getElementById("addbullet").classList.toggle("compr");
@@ -227,6 +243,7 @@ export default {
 
 #divider {
   margin-top: -50px;
+  margin-bottom: 10px;
   &.flipped {
     margin-top: -80px;
     transform: scaleY(-1);
