@@ -17,7 +17,6 @@
           }"
         />
         <input type="date" v-if="this.$root.formatDate(blog.customdate) != blog.title" v-model="formdate" @input="blog.customdate = new Date(formdate)" />
-        {{blog.customdate}}
         <div
           class="bullet"
           @click.self="setFocus(b)"
