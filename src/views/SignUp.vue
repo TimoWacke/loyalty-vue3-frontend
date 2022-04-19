@@ -1,6 +1,6 @@
 <template>
   <div class="sign-page">
-    <div class="container tight">
+    <div class="container tight" :key="keyCode">
       <VerticalIntegrations id="vlogo" variant="light" />
 
       <div class="headers">
@@ -68,11 +68,12 @@ export default {
       rppass: "",
       error: "",
       ename: null,
+      keyCode: 0,
     };
   },
   mounted() {
     var match = window.location.href.match(/referral=(\S+)$/);
-    if (match[1]) {
+    if (match && match[1]) {
       this.user["empfohlen"] = match[1];
       axios.get(vars.url + "/user/" + this.user.empfohlen).then((response) => {
         this.ename = response.data;
@@ -82,10 +83,16 @@ export default {
     }
   },
   methods: {
-    postRegister: function () {
+    postRegister() {
       this.error = "";
       if (this.rppass != this.user.password) {
         this.error = "passwords do not match";
+        return;
+      }
+      var minlength = 6
+      if (this.user.password.length < minlength) {
+        this.error = `please choose a password with at least ${minlength} characters`;
+        this.keyCode += 1;
         return;
       }
 
@@ -135,6 +142,10 @@ export default {
 h3 {
   margin-top: 5px;
   font-size: 24px;
+}
+
+input {
+  width: calc(100% - 20px) !important;
 }
 
 .app {

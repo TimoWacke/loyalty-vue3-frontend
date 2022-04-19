@@ -87,13 +87,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.name == "Flyby" || to.name == "Reset") {
+  if (to.name == "Flyby" || to.name == "Reset" || to.name == 'Journal') {
     next()
   } else {
     await axios.post(vars.url + '/token', { token: VueCookie.get('session_token') })
       .then((response) => {
         console.log("to name:", to.name)
-        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home' && to.name != 'Journal'))) {
+        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home'))) {
           App.store['user'] = response.data
           if (response.data.features.includes("Admin")) {
             next({ name: 'Admin' })
