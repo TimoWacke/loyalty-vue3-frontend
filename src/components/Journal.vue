@@ -1,15 +1,16 @@
 <template>
-  <div class="journal-view" id="iframe" v-if="done">
+  <div  id="iframe" v-if="done">
+   <div class="journal-view">
     <div
       class="blogcard"
-      @click.self="openRedirect(blog._id)"
-      v-for="blog in journal"
+      @click.self="openBlog(blog._id)"
+      v-for="blog in journalView"
       v-bind:key="blog.title"
     >
       <div v-if="blog._id != exclude">
-        <div @click.self="openRedirect(blog._id)" class="hori spce">
+        <div @click.self="openBlog(blog._id)" class="hori spce">
           <h2
-            @click.self="openRedirect(blog._id)"
+            @click="openBlog(blog._id)"
             :class="
               this.$root.formatDate(blog.customdate) != blog.title
                 ? 'named'
@@ -18,50 +19,67 @@
           >
             {{ blog.title }}
           </h2>
-          <img
-            v-if="!blog.ispublic"
-            @click="deleteBlog(blog._id)"
-            src="@/assets/delete.svg"
-            class="del-btn"
-          />
-          <div v-else class="public-indicator">
-            <span class="Mark">
-              <svg
-                viewBox="0 0 24 24"
-                id="ghq-svg-check"
-                role="presentation"
-                aria-hidden="true"
-              >
-                <path
-                  d="M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
-                ></path>
-              </svg>
-            </span>
+          <div v-if="'ispublic' in blog">
+            <img
+              v-if="!blog.ispublic"
+              @click="deleteBlog(blog._id)"
+              src="@/assets/delete.svg"
+              class="del-btn"
+            />
+            <div v-else class="public-indicator">
+              <span class="Mark">
+                <svg
+                  viewBox="0 0 24 24"
+                  id="ghq-svg-check"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
+                  ></path>
+                </svg>
+              </span>
+            </div>
           </div>
         </div>
         <p
-          @click="openRedirect(blog._id)"
+          @click="openBlog(blog._id)"
           class="date"
           v-if="this.$root.formatDate(blog.customdate) != blog.title"
         >
           {{ this.$root.formatDate(blog.customdate) }}
         </p>
         <div
-          @click="openRedirect(blog._id)"
+          @click="openBlog(blog._id)"
           class="preview"
-          v-html="blog.draftbullets[0].data.substring(0, 100)"
+          v-html="
+            blog.draftbullets[0].data.substring(0, 100) +
+            (blog.draftbullets[0].data.length > 100 ? '...' : '')
+          "
         ></div>
         <div
-          @click="openRedirect(blog._id)"
+          @click="openBlog(blog._id)"
           class="preview"
           v-if="blog.draftbullets[0].data.length < 50 && blog.draftbullets[1]"
           v-html="
             blog.draftbullets[1].data.substring(
               0,
               100 - blog.draftbullets[0].data.length
-            )
+            ) +
+            (blog.draftbullets[0].data.length >
+            100 - blog.draftbullets[0].data.length
+              ? '...'
+              : '')
           "
         ></div>
+      </div>
+    </div>
+    </div>
+    <div id="showBlog">
+      <h3>{{ focusBlog.title }}</h3>
+      <div v-for="bullet in focusBlog.draftbullets" v-bind:key="bullet">
+        <br>
+        <div>{{ bullet.data }}</div>
       </div>
     </div>
   </div>
@@ -82,6 +100,8 @@ export default {
   data() {
     return {
       journal: [],
+      journalView: [],
+      focusBlog: {},
       done: false,
     };
   },
@@ -102,15 +122,26 @@ export default {
       })
       .then((response) => {
         this.journal = response.data;
+        this.journalView = response.data;
         this.done = true;
       });
   },
   methods: {
-    openRedirect(id) {
-      if (this.blank) {
-        window.open(this.redirect + "?" + id, "_blank");
+    openBlog(id) {
+      console.log("focus blog");
+
+      if (this.redirect) {
+        if (this.blank) {
+          window.open(this.redirect + "?" + id, "_blank");
+        } else {
+          window.location.href = this.redirect + "?" + id;
+        }
       } else {
-        window.location.href = this.redirect + "?" + id;
+        console.log("focus blog");
+        this.journalView = [];
+        for (var i in this.journal) {
+          if (this.journal[i]._id == id) this.focusBlog = this.journal[i];
+        }
       }
     },
     async deleteBlog(bid) {
@@ -139,14 +170,20 @@ export default {
   justify-content: center;
 }
 
+#showBlog {
+  width: min(1200px, 65vw);
+  max-width: 90vw;
+  margin: 100px auto;
+}
+
 .blogcard {
   cursor: pointer;
   min-width: max(200px, 15.906vw);
-  margin: 20px 10px;
+  margin: calc(10px + 0.02vw) calc(10px + 0.02vw);
   width: min-content;
+  max-width: calc(100vw - 20px);
   @media only screen and (max-width: 530px) {
     width: calc(100% - 30px);
-    margin: 20px auto !important;
   }
   box-shadow: 0 0 5px #bbb;
   padding: 15px;
