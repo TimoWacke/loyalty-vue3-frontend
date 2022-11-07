@@ -13,6 +13,92 @@ export default {
         document.getElementById("send").click();
       }
     });
+    window.SnipcartSettings = {
+      publicApiKey:
+        "ODZiOGIwOTMtOTVkOS00OGJjLTliMDUtMjE2MzAwYTJiZDRjNjM4MDI4MzUzMjI4OTQyMjA0",
+      loadStrategy: "on-user-interaction",
+    };
+
+    (() => {
+      var c;
+      (c = window.SnipcartSettings).version != null || (c.version = "3.0");
+      var s;
+      (s = window.SnipcartSettings).timeoutDuration != null ||
+        (s.timeoutDuration = 2750);
+      var l;
+      (l = window.SnipcartSettings).domain != null ||
+        (l.domain = "cdn.snipcart.com");
+      var w;
+      (w = window.SnipcartSettings).protocol != null || (w.protocol = "https");
+      var f =
+          window.SnipcartSettings.version.includes("v3.0.0-ci") ||
+          (window.SnipcartSettings.version != "3.0" &&
+            window.SnipcartSettings.version.localeCompare("3.4.0", void 0, {
+              numeric: !0,
+              sensitivity: "base",
+            }) === -1),
+        m = ["focus", "mouseover", "touchmove", "scroll", "keydown"];
+      window.LoadSnipcart = o;
+      document.readyState === "loading"
+        ? document.addEventListener("DOMContentLoaded", r)
+        : r();
+      function r() {
+        window.SnipcartSettings.loadStrategy
+          ? window.SnipcartSettings.loadStrategy === "on-user-interaction" &&
+            (m.forEach((t) => document.addEventListener(t, o)),
+            setTimeout(o, window.SnipcartSettings.timeoutDuration))
+          : o();
+      }
+      var a = !1;
+      function o() {
+        if (a) return;
+        a = !0;
+        let t = document.getElementsByTagName("head")[0],
+          e = document.querySelector("#snipcart"),
+          i = document.querySelector(
+            `src[src^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][src$="snipcart.js"]`
+          ),
+          n = document.querySelector(
+            `link[href^="${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}"][href$="snipcart.css"]`
+          );
+        e ||
+          ((e = document.createElement("div")),
+          (e.id = "snipcart"),
+          e.setAttribute("hidden", "true"),
+          document.body.appendChild(e)),
+          v(e),
+          i ||
+            ((i = document.createElement("script")),
+            (i.src = `${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.js`),
+            (i.async = !0),
+            t.appendChild(i)),
+          n ||
+            ((n = document.createElement("link")),
+            (n.rel = "stylesheet"),
+            (n.type = "text/css"),
+            (n.href = `${window.SnipcartSettings.protocol}://${window.SnipcartSettings.domain}/themes/v${window.SnipcartSettings.version}/default/snipcart.css`),
+            t.prepend(n)),
+          m.forEach((g) => document.removeEventListener(g, o));
+      }
+      function v(t) {
+        !f ||
+          ((t.dataset.apiKey = window.SnipcartSettings.publicApiKey),
+          window.SnipcartSettings.addProductBehavior &&
+            (t.dataset.configAddProductBehavior =
+              window.SnipcartSettings.addProductBehavior),
+          window.SnipcartSettings.modalStyle &&
+            (t.dataset.configModalStyle = window.SnipcartSettings.modalStyle),
+          window.SnipcartSettings.currency &&
+            (t.dataset.currency = window.SnipcartSettings.currency),
+          window.SnipcartSettings.templatesUrl &&
+            (t.dataset.templatesUrl = window.SnipcartSettings.templatesUrl));
+      }
+
+      console.log("snipcart install script");
+    })();
+    document.addEventListener("snipcart.ready", () => {
+      console.log("snipcart is ready");
+    });
   },
   methods: {
     formatDate(date, format) {
@@ -62,6 +148,8 @@ export default {
 
 
 <style lang="scss">
+@import url("https://fonts.googleapis.com/css2?family=Nunito&family=Roboto");
+
 $primary: #0f476f;
 $secondary: #ff049b;
 
@@ -72,14 +160,15 @@ $secondary: #ff049b;
   align-items: center;
 }
 
-#content, #iframe,
+#content,
+#iframe,
 .sign-page {
-  font-family: "Segoe UI";
+  font-family: "Nunito", "Roboto";
   color: $primary;
 }
 
 .none {
-  display: none;
+  display: none !important;
 }
 
 .pointer {
@@ -165,7 +254,7 @@ h3 {
 
 p,
 a {
-  font-family: "Segoe UI";
+  font-family: "Nunito", "Roboto";
   margin: 0;
   color: $primary;
 
@@ -279,6 +368,11 @@ form {
     justify-content: space-between;
   }
 
+  &.even {
+    width: 100%;
+    justify-content: space-evenly;
+  }
+
   &.mobile-cmpr {
     @media only screen and (max-width: 900px) {
       flex-direction: column;
@@ -296,6 +390,10 @@ form {
   }
 }
 
+.wrapflow {
+  flex-wrap: wrap;
+}
+
 .shadow {
   box-shadow: 0px 0px 4px 0px #ddd;
   border-radius: 8px;
@@ -307,6 +405,12 @@ form {
   flex-direction: column;
   align-items: flex-start;
   width: 61%;
+
+  &.wide {
+    width: 90%;
+    max-width: 1760px;
+  }
+
   margin: auto;
 
   @media only screen and (max-width: 800px) {

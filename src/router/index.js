@@ -6,6 +6,7 @@ import Login from '@/views/Login'
 import SignUp from '../views/SignUp.vue'
 import Site from '@/views/Site'
 import Paper from '@/views/Blog'
+import Map from '@/views/Map'
 import Journal from '@/components/Journal'
 import Reset from '@/views/Reset'
 import Flyby from '@/views/Flyby'
@@ -17,7 +18,7 @@ import App from '@/App'
 
 let baseRoutes = [
   {
-    path: '/',
+    path: '/profile',
     name: 'Home',
     component: Home
   },
@@ -26,7 +27,7 @@ let baseRoutes = [
     name: 'Website',
     component: Site
   }, {
-    path: '/paper',
+    path: '/',
     name: 'Paper',
     component: Paper
   }
@@ -77,6 +78,10 @@ let baseRoutes = [
     path: '/link',
     name: 'Flyby',
     component: Flyby
+  }, {
+    path: '/pictures-map',
+    name: 'Pictures-Map',
+    component: Map
   }
 ]
 
@@ -87,13 +92,12 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.name == "Flyby" || to.name == "Reset") {
+  if (to.name == "Flyby" || to.name == "Reset" || to.name == 'Journal' || to.name == 'Pictures-Map') {
     next()
   } else {
     await axios.post(vars.url + '/token', { token: VueCookie.get('session_token') })
       .then((response) => {
-        console.log("to name:", to.name)
-        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home' && to.name != 'Journal'))) {
+        if (response.data && (to.name === 'Login' || to.name === 'Register' || (!response.data.features.includes(to.name) && to.name != 'Home'))) {
           App.store['user'] = response.data
           if (response.data.features.includes("Admin")) {
             next({ name: 'Admin' })

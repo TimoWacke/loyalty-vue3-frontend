@@ -2,17 +2,17 @@
   <div id="dashboard">
     <div id="dashboard-div" class="hiddendash">
       <div class="sideboard column gradient">
-        <VerticalIntegrations variant="dark"/>
+        <VerticalIntegrations variant="dark" />
         <div id="sections">
           <div v-for="sect in features" :key="sect">
-            <a
-              v-if="'/' + encodeURIComponent(sect.toLowerCase()) == current"
-              :href="'/' + sect.toLowerCase()"
-              class="current"
-              id="current"
+            <a            
+              :href="
+                '/' + (sect.toLowerCase() != 'paper' ? sect.toLowerCase() : '')
+              "
+              :class="'/' + encodeURIComponent(sect.toLowerCase()) == current || sect.toLowerCase() == 'paper' && current == '/' ? 'current' : ''"
+              :id="'/' + encodeURIComponent(sect.toLowerCase()) == current || sect.toLowerCase() == 'paper' && current == '/' ? 'current' : ''"
               >{{ sect }}</a
             >
-            <a v-else :href="'/' + sect.toLowerCase()">{{ sect }}</a>
           </div>
         </div>
       </div>
@@ -151,7 +151,7 @@ SignOut {
   #content {
     margin-left: 0 !important;
   }
- #banner {
+  #banner {
     max-width: 200px;
   }
 
