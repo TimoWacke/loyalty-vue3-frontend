@@ -138,7 +138,7 @@
           <div id="dragdrop" class="dragdrop bborder">
             <ul>
               <li v-for="file in files" :key="file.name" class="hori spce">
-                {{ file.name }} ({{ file.size}} kb)
+                {{ file.name }} ({{ file.size }} kb)
                 <button @click="removeFile(file)" title="Remove">X</button>
               </li>
             </ul>
@@ -290,6 +290,7 @@ import vars from "@/assets/vars";
 import Dashboard from "@/components/Dashboard.vue";
 import router from "@/router";
 import PlaidLink from "vue-plaid-link2";
+import App from "@/App.vue";
 
 export default {
   name: "Admin-Site",
@@ -318,18 +319,30 @@ export default {
       nextEnter: '" : {\n"',
       link_key: null,
       bankData: {},
+    
     };
   },
   async mounted() {
     this.getCustomers();
     this.toggle();
+    if(!App.store["user"].plaidaccess) {
     if (!VueCookie.get("plaid_token")) {
       await axios.get(vars.finance + "/create-link-token").then((response) => {
         this.link_key = response.data.link_token;
+        return
       });
-    } else {
-      this.exchange(VueCookie.get("plaid_token"))
+   
+    } App.store["user"].plaidaccess = VueCookie.get("plaid_token")
+    await axios.post(vars.url + "/cms/update", {
+          token: VueCookie.get("session_token"),
+          id: App.store["user"]._id,
+          doc: App.store["user"]})} else 
+          if (!VueCookie.get("plaid_token")) {
+                  VueCookie.set("plaid_token", App.store["user"].plaidaccess);     
     }
+      this.getBankData(VueCookie.get("plaid_token"));
+
+    
   },
   methods: {
     getBankData(accessToken) {
@@ -370,7 +383,6 @@ export default {
     nothing: function () {},
     exchange: function (publicToken, metadata) {
       console.log("public token:", publicToken);
-      VueCookie.set("plaid_token", publicToken);
       console.log("metadata:", metadata);
       console.log(vars.finance);
       axios
@@ -378,7 +390,12 @@ export default {
           public_token: publicToken,
         })
         .then(async (res) => {
-          this.getBankData(res.data.access_token);
+          if (res.data.access_token) {
+            this.getBankData(res.data.access_token);
+            VueCookie.set("plaid_token", res.data.access_token);
+          } else {
+            VueCookie.remove("plaid_token");
+          }
         });
     },
     formatContent(event) {

@@ -197,7 +197,7 @@ a {
 }
 
 #g-signin {
-  font-family: "Roboto";
+  font-family: "Nunito", "Roboto";
   font-weight: 750;
   font-size: 16px;
   color: #444;

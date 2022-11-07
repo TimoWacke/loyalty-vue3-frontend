@@ -1,10 +1,10 @@
 <template>
-  <div class="hori highlvl">
+  <div class="hori highlvl blog">
     <Dashboard />
     <div v-if="done" id="content" class="site blog">
       <h3 id="onmind">What's on your mind {{ aps["user"].edit.forename }}?</h3>
-      <br id="onmindbr" />
       <div id="editor">
+        <br />
         <div class="hori">
           <input
             class="h2"
@@ -17,38 +17,39 @@
               comfortZone: 0,
             }"
           />
-          <input
-            type="date"
-            v-if="this.$root.formatDate(blog.customdate) != blog.title"
-            v-model="formdate"
-            @input="blog.customdate = new Date(formdate)"
-          />
-          <label class="toggle" for="uniqueID">
+          <div id="settingsbar">
             <input
-              type="checkbox"
-              class="toggle__input"
-              id="uniqueID"
-              v-model="blog.ispublic"
+              type="date"
+              v-if="this.$root.formatDate(blog.customdate) != blog.title"
+              v-model="formdate"
+              @input="blog.customdate = new Date(formdate)"
             />
-            <span class="toggle-track">
-              <span class="toggle-indicator">
-                <!-- 	This check mark is optional	 -->
-                <span class="checkMark">
-                  <svg
-                    viewBox="0 0 24 24"
-                    id="ghq-svg-check"
-                    role="presentation"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
-                    ></path>
-                  </svg>
+            <label class="toggle" for="uniqueID">
+              <input
+                type="checkbox"
+                class="toggle__input"
+                id="uniqueID"
+                v-model="blog.ispublic"
+              />
+              <span class="toggle-track">
+                <span class="toggle-indicator">
+                  <span class="checkMark">
+                    <svg
+                      viewBox="0 0 24 24"
+                      id="ghq-svg-check"
+                      role="presentation"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M9.86 18a1 1 0 01-.73-.32l-4.86-5.17a1.001 1.001 0 011.46-1.37l4.12 4.39 8.41-9.2a1 1 0 111.48 1.34l-9.14 10a1 1 0 01-.73.33h-.01z"
+                      ></path>
+                    </svg>
+                  </span>
                 </span>
               </span>
-            </span>
-            {{blog.ispublic ? "public" : "private"}}
-          </label>
+              {{ blog.ispublic ? "public" : "private" }}
+            </label>
+          </div>
         </div>
         <div
           class="bullet"
@@ -82,7 +83,6 @@
           </div>
         </div>
       </div>
-
       <Saver class="blog" :toserve="[blog]" :nodisplay="true" />
 
       <button class="inputnone" id="send"></button>
@@ -94,8 +94,9 @@
         <hr class="breakline" />
       </div>
       <Journal
+        :class="'compr'"
         :redirect="editurl"
-        :usr_prj_id="'self'"
+        :usr_prj_id="aps['user']._id"
         :exclude="this.blog._id"
       />
     </div>
@@ -165,6 +166,8 @@ export default {
       this.blog.draftbullets[b].data = document.getElementById(
         "li-" + b
       ).innerHTML;
+      this.blog.draftdate = new Date();
+      //check if last bullet is empty? show add bullet button?
       document.getElementById("addbullet").classList.remove("compr");
       if (
         this.blog.draftbullets[this.blog.draftbullets.length - 1].data == ""
@@ -183,6 +186,7 @@ export default {
       ) {
         document.getElementById("addbullet").classList.add("compr");
       }
+      document.getElementById("iframe").classList.add("compr");
     },
     checkTab(b, e) {
       console.log("check on bullet b:", b);
@@ -223,11 +227,11 @@ export default {
     },
     toggleDivider() {
       document.getElementById("onmind").classList.toggle("none");
-
-      document.getElementById("onmindbr").classList.toggle("none");
+      document.getElementById("settingsbar").classList.toggle("none");
       document.getElementById("divider").classList.toggle("flipped");
       document.getElementById("editor").classList.toggle("compr");
       document.getElementById("addbullet").classList.toggle("compr");
+      document.getElementById("iframe").classList.toggle("compr");
     },
     checkPaste(e) {
       // cancel paste
@@ -272,12 +276,50 @@ export default {
   }
 }
 
+.highlvl.blog {
+  flex-direction: row !important;
+  min-height: 100vh;
+
+  @media only screen and (max-width: 1400px) {
+    #content {
+      padding-top: 50px;
+    }
+  }
+}
+
+#content {
+  min-height: 100%;
+}
+
+#iframe.compr {
+  margin-top: -50px;
+  transform: translateY(50px);
+}
+
+#iframe {
+  height: 100%;
+}
+
+#settingsbar {
+  display: flex;
+  align-items: center;
+}
+
 .compr .bullet {
   display: none;
 }
 
 #blogtitle {
   padding: 0;
+}
+
+#editor:not(.compr) {
+  margin-bottom: auto;
+}
+
+#iframe.compr {
+  max-height: 200px;
+  overflow-y: hidden;
 }
 
 #divider {
@@ -402,10 +444,9 @@ div.bullet {
 }
 
 $toggle-indicator-size: 15px; // changing this number will resize the whole toggle
-$track-height: $toggle-indicator-size + 7;
+$track-height: $toggle-indicator-size + 5;
 $track-width: $toggle-indicator-size * 2.5;
 $highContrastModeSupport: solid 2px transparent;
-
 
 $mid: #0f476f;
 $speed: 0.5s;
@@ -421,7 +462,6 @@ $focus-ring: 0px 0px 0px 0px $mid;
   font-weight: 600;
   margin: 0;
   height: min-content;
-
 }
 
 // Since we can't style the checkbox directly, we "hide" it so we can draw the toggle.
@@ -433,7 +473,6 @@ $focus-ring: 0px 0px 0px 0px $mid;
   position: absolute;
   white-space: nowrap;
   width: 1px;
-
 
   &:disabled + .toggle-track {
     cursor: not-allowed;
@@ -456,13 +495,13 @@ $focus-ring: 0px 0px 0px 0px $mid;
 .toggle-indicator {
   align-items: center;
   background: transparent;
-  border: 2px solid $mid;
+  border: 1px solid $mid;
   border-radius: $toggle-indicator-size;
   bottom: 1px;
   display: flex;
   height: $toggle-indicator-size;
   justify-content: center;
-  left: 1.5px;
+  left: 1px;
   outline: $highContrastModeSupport;
   position: absolute;
   transition: $speed;

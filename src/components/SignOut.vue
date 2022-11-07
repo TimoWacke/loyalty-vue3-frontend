@@ -1,6 +1,6 @@
 <template>
   <div id="signout" class="horizontal">
-    <a style="text-decoration: none" href="/">
+    <a style="text-decoration: none" href="/profile">
       {{ aps["user"].edit.forename }} {{ aps["user"].edit.surname }}
     </a>
     <button @click="signOut()">Sign out</button>
