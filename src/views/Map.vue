@@ -76,7 +76,7 @@
     </div>
     <div id="mockupContainer">
       <img v-for="mockup in mockupUrls" :key="mockup" :src="mockup" />
-      <img v-if="identifier" :src="previewUrl" />
+      <img v-if="previewUrl" :src="previewUrl" />
       <div v-if="!uploadDone || !mockUpDone" id="loadingwrapper">
         <div id="loadingbox">
           <div id="before"><br /></div>
@@ -90,13 +90,30 @@
       v-if="identifier"
       class="submit-btn snipcart-add-item"
       :data-item-id="identifier"
+      :data-item-url="'/pictures-map?' + identifier"
       :data-item-price="120.0"
       :data-item-image="mockupUrls[0]"
-      data-item-name="CityCanvas"
+      :data-item-name="previewLocation"
     >
       add to cart
     </button>
-
+    <a class="snipcart-checkout">
+      <svg
+        height="1em"
+        width="1em"
+        focusable="false"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        aria-labelledby="your-bag-12731763"
+        role="img"
+        aria-hidden="false"
+      >
+        <title>Your shopping cart</title>
+        <path
+          d="M21.193 8.712a2.984 2.984 0 0 0-2.986-2.726h-.952v-.751a5.255 5.255 0 0 0-10.51 0v.75h-.951a2.983 2.983 0 0 0-2.986 2.727L1.715 20.73A2.999 2.999 0 0 0 4.7 24h.005l14.599-.027a2.998 2.998 0 0 0 2.98-3.27L21.193 8.712zM8.246 5.235a3.754 3.754 0 0 1 7.508 0v.75H8.246v-.75zm11.056 17.238-14.599.025h-.002a1.496 1.496 0 0 1-1.49-1.631l1.093-12.02a1.488 1.488 0 0 1 1.49-1.36h.95V9.74a.75.75 0 0 0 1.502 0V7.487h7.508V9.74c0 .415.336.75.75.75h.002a.75.75 0 0 0 .75-.75V7.487h.951a1.49 1.49 0 0 1 1.49 1.361l1.092 11.993a1.496 1.496 0 0 1-1.488 1.632z"
+        ></path>
+      </svg>
+    </a>
     <span class="snipcart-items-count"></span>
     <span class="snipcart-total-price"></span>
   </div>
@@ -105,6 +122,285 @@
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@1,900&display=swap");
 </style>
+
+<script>
+import axios from "axios";
+import VueCookie from "vue-cookies";
+import vars from "../assets/vars";
+import GMap from "../components/myMap.vue";
+
+export default {
+  name: "Map-Site",
+  data() {
+    return {
+      status: "",
+      scale: 2.5,
+      identifier: false,
+      uploadDone: true,
+      mockUpDone: true,
+      file: false,
+      coordinates: { lat: 53.55, lng: 10, zm: 12 },
+      imageToken: "",
+      shopifyToken: ((Date.now() % (4 * 366 * 24 * 60 * 60 * 1000)) * 7)
+        .toString(36)
+        .toUpperCase(),
+      mockupUrls: [],
+      uploadPercentage: 0,
+      errormsg: "",
+      previewLocation: "",
+      previewUrl: "",
+      suggestedCities: [
+        { name: "Amsterdam", lat: 52.365, lng: 4.88, zm: 14.9 },
+        { name: "London", lat: 51.5, lng: -0.09, zm: 13.8 },
+        { name: "Paris", lat: 48.8566, lng: 2.33, zm: 14.8 },
+        { name: "Stockholm", lat: 59.335, lng: 18.0686, zm: 14.3 },
+        { name: "Cape Town", lat: -34, lng: 18.48, zm: 14 },
+        { name: "Rio d Janeiro", lat: -22.93, lng: -43.2, zm: 14.4 },
+        { name: "Tokyo", lat: 35.7, lng: 139.8, zm: 12 },
+        { name: "Bejing", lat: 39.9, lng: 116.4, zm: 13 },
+        { name: "Shanghai", lat: 31.1, lng: 121.55, zm: 11.75 },
+        { name: "Guangzhou", lat: 22.8, lng: 113.3, zm: 11.4 },
+        { name: "Hong Kong", lat: 22.31, lng: 114.17, zm: 14.9 },
+        { name: "New York", lat: 40.733, lng: -73.99, zm: 14.6 },
+        { name: "Los Angeles", lat: 33.93, lng: -118.2, zm: 12.3 },
+        { name: "Chicago", lat: 41.8781, lng: -87.67, zm: 14.6 },
+      ],
+    };
+  },
+  mounted() {
+    // identifier format:
+    try {
+      var me = this;
+      this.identifier = window.location.href.match(/\?(\S+)/)[1];
+      console.log(this.identifier);
+      axios
+        .get(vars.url + "/printful/identifier/" + this.identifier)
+        .then((response) => {
+          me.previewUrl = response.data.previewUrl;
+          me.previewLocation = response.data.region;
+          me.coordinates.lat = response.data.lat;
+          me.coordinates.lng = response.data.lng;
+          me.coordinates.zm = response.data.zm;
+          me.scale =
+            response.data.width /
+            document.getElementById("background").offsetWidth;
+          me.status = "Loading Mockups";
+          me.getMockUps();
+        });
+    } catch {
+      this.coordinates = this.suggestedCities[0];
+    }
+    setTimeout(() => this.reloadScale(), 2500);
+  },
+  methods: {
+    moveTo(cityDict) {
+      this.coordinates = cityDict;
+      this.scale = 3;
+      setTimeout(() => this.reloadScale(false), 0);
+    },
+    reloadScale(updatecords = true) {
+      if (updatecords) {
+        var loc = document.querySelector(
+          "#gmap > div > div.vue-map > div > div > div:nth-child(15) > div > a"
+        ).href;
+        var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
+        this.coordinates = {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2]),
+          zm: parseFloat(match[3]),
+        };
+      }
+      var ow = document.getElementById("background").offsetWidth;
+      var oh = document.getElementById("background").offsetHeight;
+      var nw = ow * this.scale;
+      var nh = oh * this.scale;
+      //the downsizing is not centered, but the scaling after is. that's why it's offset.
+      var tx = (ow - nw) / (2 / this.scale);
+      var ty = (oh - nh) / (2 / this.scale);
+
+      document.getElementById("gmap").style.width = Math.round(nw) + "px";
+      document.getElementById("gmap").style.height = Math.round(nh) + "px";
+      document.getElementById("gmap").style.transform = `scale(${
+        1 / this.scale
+      }) translate(${tx}px, ${ty}px)`;
+    },
+    async onFileChange(e) {
+      this.uploadDone = false;
+      this.status = "uploading file";
+      this.errormsg = "";
+      this.file = e.target.files[0];
+      if (this.file.size > 10000000) {
+        this.errormsg =
+          "File too large. Don't worry we don't need the details for the design";
+        return;
+      }
+      this.uploadFile();
+      const photoUrl = URL.createObjectURL(this.file);
+      const image = new Image();
+      const imageDimensions = await new Promise((resolve) => {
+        image.onload = () => {
+          const dimensions = {
+            height: image.height,
+            width: image.width,
+          };
+
+          resolve(dimensions);
+        };
+        image.src = photoUrl;
+        document.getElementById(
+          "background"
+        ).style.backgroundImage = `url(${photoUrl})`;
+      });
+      console.log(imageDimensions);
+      if (imageDimensions.height > imageDimensions.width) {
+        document.getElementById("background").style.width =
+          "calc(90vw / 24 * 18)";
+        document.getElementById("background").style.maxWidth =
+          "calc(900px / 24 * 18)";
+        document.getElementById("background").style.height = "90vw";
+        document.getElementById("background").style.maxHeight = "900px";
+      }
+      setTimeout(() => this.reloadScale(false), 0);
+    },
+    uploadFile() {
+      var formData = new FormData();
+      formData.append("shopifyToken", this.shopifyToken);
+      formData.append("file", document.getElementById("file").files[0]);
+      var me = this;
+      axios
+        .post(vars.url + "/printful/userpicture", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: function (progressEvent) {
+            this.uploadPercentage = parseInt(
+              Math.round((progressEvent.loaded / progressEvent.total) * 100)
+            );
+            document.getElementById("preview-btn").style.backgroundImage =
+              "linear-gradient(90deg, #0f476fbb " +
+              (this.uploadPercentage - 1) +
+              "%, #0f476f " +
+              this.uploadPercentage +
+              "%)";
+          }.bind(this),
+        })
+        .then(function (response) {
+          me.uploadDone = true;
+          me.imageToken = response.data.saved;
+        })
+        .catch(function (error) {
+          console.log(error);
+          me.errormsg = error;
+        });
+    },
+    getPreview() {
+      this.previewUrl = "";
+      this.mockupUrls = [];
+      this.identifier = false;
+      this.status = "Connecting with Google Maps";
+      this.uploadPercentage = "";
+      var me = this;
+      setTimeout(function () {
+        window.scrollBy({
+          top: window.innerHeight * 0.7,
+          left: 0,
+          behavior: "smooth",
+        });
+      }, 50);
+      setTimeout(function () {
+        if (!me.mockUpDone) {
+          me.status = "Preparing your custom map";
+        }
+      }, 4000);
+      setTimeout(function () {
+        if (!me.mockUpDone) {
+          me.status = "Comparing both images";
+        }
+      }, 8000);
+      setTimeout(function () {
+        if (!me.mockUpDone) {
+          me.status = "Calculating design estimate";
+        }
+      }, 12000);
+      setTimeout(function () {
+        if (!me.mockUpDone) {
+          me.status = "Color grading";
+        }
+      }, 16000);
+
+      console.log("starts render");
+      var loc = document.querySelector(
+        "#gmap > div > div.vue-map > div > div > div:nth-child(15) > div > a"
+      ).href;
+      var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
+      console.log(match);
+      var coordinates = {
+        lat: match[1],
+        lng: match[2],
+        zm: match[3],
+      };
+      var formData = new FormData();
+      for (var i in Object.keys(coordinates)) {
+        var elem = Object.keys(coordinates)[i];
+        formData.append(elem, coordinates[elem]);
+      }
+      formData.append("imageToken", this.imageToken);
+
+      var ow = document.getElementById("background").offsetWidth;
+      var oh = document.getElementById("background").offsetHeight;
+      formData.append("width", ow * this.scale);
+      formData.append("height", oh * this.scale);
+      console.log(formData);
+      this.mockUpDone = false;
+      axios
+        .post(vars.url + "/printful/pixtures", formData, {
+          headers: {
+            "Content-Type": "mulipart/form-data",
+          },
+        })
+        .then((response) => {
+          /*const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", "render.png"); //or any other extension
+          document.body.appendChild(link);
+          link.click();*/
+          me.identifier = response.data.id;
+          me.previewUrl = response.data.preview;
+          me.previewLocation = response.data.location;
+          this.getMockUps();
+        })
+        .catch((error) => console.log(error));
+    },
+    getMockUps() {
+      this.status = "Generating Mockups";
+      var me = this;
+      axios
+        .get(vars.url + "/printful/mockups/" + this.identifier)
+        .then((response) => {
+          me.mockupUrls = response.data.mockup;
+          me.mockUpDone = true;
+        })
+        .catch((error) => console.log(error));
+      setTimeout(function () {
+        if (!me.mockUpDone) {
+          me.status = "Finishing up";
+        }
+      }, 4000);
+    },
+    checkOut() {
+      axios
+        .post(vars.url + "/printful/checkout", {
+          token: VueCookie.get("session_token"),
+          imageToken: this.imageToken,
+        })
+        .then(alert("order created"));
+    },
+  },
+  components: { GMap },
+};
+</script>
+
 
 <style lang="scss" scoped>
 #mockupContainer {
@@ -358,6 +654,7 @@ input#file {
 .cityname {
   display: block;
   color: #0f476f;
+
   font-size: calc(3vw + 50px);
   letter-spacing: 8px;
   font-family: "Poppins", sans-;
@@ -368,12 +665,11 @@ input#file {
     background-image: repeating-linear-gradient(
       45deg,
       transparent 0,
-      transparent 2px,
-      #bbb 2px,
-      #bbb 4px
+      transparent 2.828px,
+      #ccc 2.828px,
+      #ccc 5.656px
     );
     -webkit-background-clip: text;
-
     color: transparent;
     transition: 0.5s;
   }
@@ -399,260 +695,3 @@ input#file {
   }
 }
 </style>
-<script>
-import axios from "axios";
-import VueCookie from "vue-cookies";
-import vars from "../assets/vars";
-import GMap from "../components/myMap.vue";
-
-export default {
-  name: "Map-Site",
-  data() {
-    return {
-      status: "",
-      scale: 3,
-      identifier: false,
-      uploadDone: true,
-      mockUpDone: true,
-      file: false,
-      coordinates: { lat: 53.55, lng: 10, zm: 12 },
-      imageToken: "",
-      shopifyToken: ((Date.now() % (4 * 366 * 24 * 60 * 60 * 1000)) * 7)
-        .toString(36)
-        .toUpperCase(),
-      mockupUrls: [],
-      uploadPercentage: 0,
-      errormsg: "",
-      previewLocation: "",
-      previewUrl: "",
-      suggestedCities: [
-        { name: "Guangzhou", lat: 22.8, lng: 113.3, zm: 11.4 },
-        { name: "Amsterdam", lat: 52.365, lng: 4.88, zm: 14.9 },
-        { name: "London", lat: 51.5, lng: -0.09, zm: 13.8 },
-        { name: "Paris", lat: 48.8566, lng: 2.33, zm: 14.8 },
-        { name: "Stockholm", lat: 59.335, lng: 18.0686, zm: 14.3 },
-        { name: "Cape Town", lat: -34, lng: 18.48, zm: 14 },
-        { name: "Rio d Janeiro", lat: -22.93, lng: -43.2, zm: 14.4 },
-        { name: "Tokyo", lat: 35.7, lng: 139.8, zm: 12 },
-        { name: "Bejing", lat: 39.9, lng: 116.4, zm: 13 },
-        { name: "Shanghai", lat: 39.9, lng: 116.4, zm: 13 },
-        { name: "Hong Kong", lat: 22.31, lng: 114.17, zm: 14.9 },
-        { name: "New York", lat: 40.733, lng: -73.99, zm: 14.6 },
-        { name: "Los Angeles", lat: 33.93, lng: -118.2, zm: 12.3 },
-        { name: "Chicago", lat: 41.8781, lng: -87.67, zm: 14.6 },
-      ],
-    };
-  },
-  mounted() {
-    this.coordinates = this.suggestedCities[0];
-    setTimeout(() => this.reloadScale(), 4000);
-  },
-  methods: {
-    moveTo(cityDict) {
-      this.coordinates = cityDict;
-      this.scale = 3;
-      setTimeout(() => this.reloadScale(false), 0);
-    },
-    reloadScale(updatecords = true) {
-      if (updatecords) {
-        var loc = document.querySelector(
-          "#gmap > div > div.vue-map > div > div > div:nth-child(15) > div > a"
-        ).href;
-        var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
-        this.coordinates = {
-          lat: parseFloat(match[1]),
-          lng: parseFloat(match[2]),
-          zm: parseFloat(match[3]),
-        };
-      }
-      var ow = document.getElementById("background").offsetWidth;
-      var oh = document.getElementById("background").offsetHeight;
-      var nw = ow * this.scale;
-      var nh = oh * this.scale;
-      //the downsizing is not centered, but the scaling after is. that's why it's offset.
-      var tx = (ow - nw) / (2 / this.scale);
-      var ty = (oh - nh) / (2 / this.scale);
-
-      document.getElementById("gmap").style.width = Math.round(nw) + "px";
-      document.getElementById("gmap").style.height = Math.round(nh) + "px";
-      document.getElementById("gmap").style.transform = `scale(${
-        1 / this.scale
-      }) translate(${tx}px, ${ty}px)`;
-    },
-    async onFileChange(e) {
-      this.uploadDone = false;
-      this.status = "uploading file";
-      this.errormsg = "";
-      this.file = e.target.files[0];
-      if (this.file.size > 10000000) {
-        this.errormsg =
-          "File too large. Don't worry we don't need the details for the design";
-        return;
-      }
-      this.uploadFile();
-      const photoUrl = URL.createObjectURL(this.file);
-      const image = new Image();
-      const imageDimensions = await new Promise((resolve) => {
-        image.onload = () => {
-          const dimensions = {
-            height: image.height,
-            width: image.width,
-          };
-
-          resolve(dimensions);
-        };
-        image.src = photoUrl;
-        document.getElementById(
-          "background"
-        ).style.backgroundImage = `url(${photoUrl})`;
-      });
-      console.log(imageDimensions);
-      if (imageDimensions.height > imageDimensions.width) {
-        document.getElementById("background").style.width =
-          "calc(90vw / 24 * 18)";
-        document.getElementById("background").style.maxWidth =
-          "calc(900px / 24 * 18)";
-        document.getElementById("background").style.height = "90vw";
-        document.getElementById("background").style.maxHeight = "900px";
-      }
-      setTimeout(() => this.reloadScale(false), 0);
-    },
-    uploadFile() {
-      var formData = new FormData();
-      formData.append("shopifyToken", this.shopifyToken);
-      formData.append("file", document.getElementById("file").files[0]);
-      var me = this;
-      axios
-        .post(vars.url + "/printful/userpicture", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: function (progressEvent) {
-            this.uploadPercentage = parseInt(
-              Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            );
-            document.getElementById("preview-btn").style.backgroundImage =
-              "linear-gradient(90deg, #0f476fbb " +
-              (this.uploadPercentage - 1) +
-              "%, #0f476f " +
-              this.uploadPercentage +
-              "%)";
-          }.bind(this),
-        })
-        .then(function (response) {
-          me.uploadDone = true;
-          me.imageToken = response.data.saved;
-        })
-        .catch(function (error) {
-          console.log(error);
-          me.errormsg = error;
-        });
-    },
-    getPreview() {
-      this.previewUrl = ""
-      this.mockupUrls = []
-      this.identifier = false
-      this.status = "Connecting with Google Maps";
-      this.uploadPercentage = "";
-      var me = this;
-      setTimeout(function () {
-        window.scrollBy({
-          top: window.innerHeight * 0.7,
-          left: 0,
-          behavior: "smooth",
-        });
-      }, 50);
-      setTimeout(function () {
-        if (!me.mockUpDone) {
-          me.status = "Preparing your custom map";
-        }
-      }, 4000);
-      setTimeout(function () {
-        if (!me.mockUpDone) {
-          me.status = "Comparing both images";
-        }
-      }, 8000);
-      setTimeout(function () {
-        if (!me.mockUpDone) {
-          me.status = "Calculating design estimate";
-        }
-      }, 12000);
-      setTimeout(function () {
-        if (!me.mockUpDone) {
-          me.status = "Color grading";
-        }
-      }, 16000);
-
-      console.log("starts render");
-      var loc = document.querySelector(
-        "#gmap > div > div.vue-map > div > div > div:nth-child(15) > div > a"
-      ).href;
-      var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
-      console.log(match);
-      var coordinates = {
-        lat: match[1],
-        lng: match[2],
-        zm: match[3],
-      };
-      var formData = new FormData();
-      for (var i in Object.keys(coordinates)) {
-        var elem = Object.keys(coordinates)[i];
-        formData.append(elem, coordinates[elem]);
-      }
-      formData.append("imageToken", this.imageToken);
-
-      var ow = document.getElementById("background").offsetWidth;
-      var oh = document.getElementById("background").offsetHeight;
-      formData.append("width", ow * this.scale);
-      formData.append("height", oh * this.scale);
-      console.log(formData);
-      this.mockUpDone = false;
-      axios
-        .post(vars.url + "/printful/pixtures", formData, {
-          headers: {
-            "Content-Type": "mulipart/form-data",
-          },
-        })
-        .then((response) => {
-          /*const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute("download", "render.png"); //or any other extension
-          document.body.appendChild(link);
-          link.click();*/
-          me.identifier = response.data.id;
-          me.previewUrl = response.data.preview;
-          me.previewLocation = response.data.location;
-          this.getMockUps();
-        })
-        .catch((error) => console.log(error));
-    },
-    getMockUps() {
-      this.status = "Generating Mockups";
-      var me = this;
-      axios
-        .get(vars.url + "/printful/mockups/" + this.identifier)
-        .then((response) => {
-          me.mockupUrls = response.data.mockup;
-          me.mockUpDone = true;
-        })
-        .catch((error) => console.log(error));
-      setTimeout(function () {
-        if (!me.mockUpDone) {
-          me.status = "Finishing up";
-        }
-      }, 4000);
-    },
-    checkOut() {
-      axios
-        .post(vars.url + "/printful/checkout", {
-          token: VueCookie.get("session_token"),
-          imageToken: this.imageToken,
-        })
-        .then(alert("order created"));
-    },
-  },
-  components: { GMap },
-};
-</script>
-

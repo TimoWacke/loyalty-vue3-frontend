@@ -77,7 +77,7 @@
               v-bind:value="item[name]"
               @input="valChg(name, id)"
               :id="id + name" 
-              :type="name == 'color' ? 'color' : 'text'"
+              :type="['color, checkbox'].includes(name) ? name : 'text'"
               
             />
           </div>
