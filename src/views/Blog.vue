@@ -186,7 +186,6 @@ export default {
       ) {
         document.getElementById("addbullet").classList.add("compr");
       }
-      document.getElementById("iframe").classList.add("compr");
     },
     checkTab(b, e) {
       console.log("check on bullet b:", b);

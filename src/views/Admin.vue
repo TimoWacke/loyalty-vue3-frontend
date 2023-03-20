@@ -147,6 +147,7 @@
         </div>
         <div class="project fat">
           <h2>Check your Bank Account</h2>
+          <p>{{ plaid_errorcorde }}</p>
           <PlaidLink
             v-if="link_key"
             clientName="FinancePictures"
@@ -277,6 +278,40 @@
           </div>
           <button style="width: 100%" @click="save">save</button>
         </div>
+        <div class="project fat">
+          <h2>Your webtracking analytics</h2>
+          <div class="hori spce">
+            <button style="margin-right: 5px" @click="setTimeline(1)">
+              24 hours
+            </button>
+            <button style="margin-right: 5px" @click="setTimeline(7)">
+              7 days
+            </button>
+            <button style="margin-right: 5px" @click="setTimeline(30)">
+              30 days
+            </button>
+            <button style="margin-right: 5px" @click="setTimeline(365)">
+              365 days
+            </button>
+          </div>
+          <div
+            class="session"
+            v-for="(sessdata, key) in analyticsdata"
+            :key="key"
+          >
+            <div class="session" v-for="(domain, name) in sessdata" :key="name">
+              <br />
+              <label for="">{{ name }}</label>
+              <div class="hori spce">
+                <p>visits: {{ domain.visits }}</p>
+                <br />
+                <p>unique visitors: {{ domain.uniqueusers }}</p>
+                <br />
+                <p>signed in visitors: {{ domain.signedusers }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -318,42 +353,86 @@ export default {
       nextTab: '" : "',
       nextEnter: '" : {\n"',
       link_key: null,
+      plaid_errorcorde: "",
       bankData: {},
-    
+      apikeys: ["s9MsnRtgo1NzHEh0", "76EGqqlZjsIglFWQ"],
+      analyticsdata: {},
+      timeline: false,
     };
   },
   async mounted() {
     this.getCustomers();
     this.toggle();
-    if(!App.store["user"].plaidaccess) {
-    if (!VueCookie.get("plaid_token")) {
-      await axios.get(vars.finance + "/create-link-token").then((response) => {
-        this.link_key = response.data.link_token;
-        return
-      });
-   
-    } App.store["user"].plaidaccess = VueCookie.get("plaid_token")
-    await axios.post(vars.url + "/cms/update", {
-          token: VueCookie.get("session_token"),
-          id: App.store["user"]._id,
-          doc: App.store["user"]})} else 
-          if (!VueCookie.get("plaid_token")) {
-                  VueCookie.set("plaid_token", App.store["user"].plaidaccess);     
-    }
+    await this.initBankData(); // if no plaid_token set plaid_token or link_key
+    if (VueCookie.get("plaid_token"))
       this.getBankData(VueCookie.get("plaid_token"));
-
-    
+    this.getAnalyticsData();
+    //apikey analtycsdata
   },
   methods: {
+    setTimeline(days) {
+      this.timeline = new Date(
+        new Date().getTime() - days * 24 * 60 * 60 * 1000
+      );
+      this.getAnalyticsData();
+    },
+    async getAnalyticsData() {
+      var me = this;
+      for (var key of me.apikeys) {
+        await axios
+          .post(vars.url + "/analytics/data", {
+            token: VueCookie.get("session_token"),
+            apikey: key,
+            timeline: me.timeline,
+          })
+          .then((response) => {
+            me.analyticsdata[key] = response.data;
+            console.log("loaded analytics for key:", key);
+          });
+      }
+    },
+    async initBankData() {
+      if (!App.store["user"].plaidaccess) {
+        if (!VueCookie.get("plaid_token")) {
+          await axios
+            .get(vars.finance + "/create-link-token")
+            .then((response) => {
+              this.link_key = response.data.link_token;
+              return;
+            });
+        }
+        App.store["user"].plaidaccess = VueCookie.get("plaid_token");
+        await axios.post(vars.url + "/cms/update", {
+          token: VueCookie.get("session_token"),
+          id: App.store["user"]._id,
+          doc: App.store["user"],
+        });
+      } else if (!VueCookie.get("plaid_token")) {
+        VueCookie.set("plaid_token", App.store["user"].plaidaccess);
+      }
+    },
     getBankData(accessToken) {
       const today = new Date();
+      const startDate = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000)
+      var me = this;
       axios
         .post(vars.finance + "/transactions", {
           access_token: accessToken,
-          startDate: new Date().setDate(today.getDate() - 30),
+          startDate: startDate,
         })
         .then((response) => {
           console.log(response.data);
+          if (response.data.error) {
+            if (response.data.error.error_code == "ITEM_LOGIN_REQUIRED") {
+              VueCookie.remove("plaid_token");
+              App.store["user"].plaidaccess = null;
+              me.initBankData();
+              return;
+            } else {
+              me.plaid_errorcorde = response.data.error;
+            }
+          }
+
           var accounts = {};
           var balances = {};
           for (var i in response.data.accounts) {
@@ -532,6 +611,16 @@ export default {
         });
       VueCookie.set("session_token", vToken);
       router.push("/");
+    },
+    async addApiKey(authorized = []) {
+      await axios
+        .post(vars.url + "/analytics/createApiKey", {
+          token: VueCookie.get("session_token"),
+          authorized: authorized,
+        })
+        .then((response) => {
+          alert("created api key: " + JSON.stringify(response.data));
+        });
     },
   },
   components: {

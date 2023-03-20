@@ -140,9 +140,13 @@ export default {
     if (!isnull) {
       document.getElementById("iframe").classList.remove("compr");
     }
-    if (match[1]) {
-      console.log("open:", match[1]);
-      this.openBlog(match[1]);
+    try {
+      if (match[1]) {
+        console.log("open:", match[1]);
+        this.openBlog(match[1]);
+      }
+    } catch {
+      console.log("main page");
     }
   },
   methods: {
@@ -172,11 +176,13 @@ export default {
       var match = window.location.href.match(
         /^([^?]+\/journal\?)[^?]*(id=[a-zA-Z0-9]{24})/
       );
-      this.focusBlog = undefined;
+      this.focusBlog = {};
       var newurl = match[1] + match[2];
       window.history.pushState({ path: newurl }, "", newurl);
       this.keyCode += 1;
+      this.journalView = this.journal;
     },
+   
     async deleteBlog(bid) {
       await axios
         .post(vars.url + "/cms/delete-blog", {
@@ -192,15 +198,15 @@ export default {
         });
     },
     async share() {
+      var shareurl =
+        vars.loyalty +
+        "/journal?id=" +
+        (this.focusBlog._id ? this.focusBlog._id : this.usedid);
+     
       if (navigator.share) {
-        var shareurl =
-          window.location.href.match(/^([^?/:]+\S\/)[^?]*/)[1] +
-          "journal?id=" +
-          this.focusBlog ? this.focusBlog._id : this.usedid;
-        console.log(shareurl);
         await navigator
           .share({
-            title: "WebShare API Demo",
+            title: "Share your Journal",
             url: shareurl,
           })
           .then(() => {
@@ -208,7 +214,7 @@ export default {
           })
           .catch(console.error);
       } else {
-        // fallback
+        alert("couldnt share: " + shareurl);
       }
     },
   },
