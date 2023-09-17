@@ -390,7 +390,6 @@ form {
   }
 }
 
-
 .shadow {
   box-shadow: 0px 0px 4px 0px #ddd;
   border-radius: 8px;
@@ -459,6 +458,11 @@ button {
   font-weight: bold;
   padding: 5px 10px;
   background-color: $primary;
+  &.invert {
+    border: 2px solid;
+    background-color: #fff;
+    color: $primary;
+  }
 }
 
 .gradient {
