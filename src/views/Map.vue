@@ -329,9 +329,9 @@ export default {
       }, 16000);
 
       console.log("starts render");
-      var loc = document.querySelector(
-        "#gmap > div > div.vue-map > div > div > div:nth-child(15) > div > a"
-      ).href;
+      let mapDiv = document.querySelector('div.vue-map');
+      let a_tag = mapDiv.querySelectorAll('a[href*="google.com"]');
+      var loc = a_tag[0].href;
       var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
       console.log(match);
       var coordinates = {
