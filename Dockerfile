@@ -1,20 +1,29 @@
-# Use an official Node.js runtime as a parent image
-FROM node:18-alpine
+# Stage 1: Build the Vue 3 app
+FROM node:18-alpine AS build
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json (if available)
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install the dependencies
+# Install dependencies
 RUN npm install
 
 # Copy the rest of the application files
 COPY . .
 
-# Build the application
+# Build the app
 RUN npm run build
 
-# Command to exit the container after build
-CMD ["echo", "Build complete. Container is exiting."]
+# Stage 2: Serve the app with Nginx
+FROM nginx:alpine
+
+# Copy the build output from the previous stage to the Nginx html directory
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
