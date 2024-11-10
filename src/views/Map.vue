@@ -5,13 +5,7 @@
         <h1>Create your custom design</h1>
         <br />
         <p id="error">{{ errormsg }}</p>
-        <input
-          id="file"
-          class="custom-file-input"
-          type="file"
-          accept="image/*"
-          v-on:change="onFileChange"
-        />
+        <input id="file" class="custom-file-input" type="file" accept="image/*" v-on:change="onFileChange" />
         <br />
         <label for="">Jump to city:</label>
         <br />
@@ -23,38 +17,23 @@
       </div>
       <div>
         <h4 class="label">level of detail</h4>
-        <input
-          id="rs-range-line"
-          class="rs-range"
-          type="range"
-          min="1"
-          max="4"
-          step="0.01"
-          v-model="scale"
-          @input="reloadScale"
-        />
+        <input id="rs-range-line" class="rs-range" type="range" min="1" max="4" step="0.01" v-model="scale"
+          @input="reloadScale" />
         <div id="background" red="bg">
           <GMap id="gmap" :key="coordinates.lat" :coordinates="coordinates" />
         </div>
-        <button
-          id="preview-btn"
-          class="submit-btn"
-          :disabled="!uploadDone || !file"
-          @click="getPreview"
-          :data-item-id="
-            imageToken +
-            '_lat' +
-            coordinates.lat +
-            '_lng' +
-            coordinates.lng +
-            '_zm' +
-            coordinates.zm +
-            '_scale' +
-            scale +
-            '_ratio' +
-            24 / 18
-          "
-        >
+        <button id="preview-btn" class="submit-btn" :disabled="!uploadDone || !file" @click="getPreview" :data-item-id="imageId +
+          '_lat' +
+          coordinates.lat +
+          '_lng' +
+          coordinates.lng +
+          '_zm' +
+          coordinates.zm +
+          '_scale' +
+          scale +
+          '_ratio' +
+          24 / 18
+          ">
           {{
             !uploadDone || !file
               ? "Uploading your image"
@@ -86,32 +65,18 @@
         </div>
       </div>
     </div>
-    <button
-      v-if="identifier"
-      class="submit-btn snipcart-add-item"
-      :data-item-id="identifier"
-      :data-item-url="'/pictures-map?' + identifier"
-      :data-item-price="120.0"
-      :data-item-image="mockupUrls[0]"
-      :data-item-name="previewLocation"
-    >
+    <button v-if="identifier" class="submit-btn snipcart-add-item" :data-item-id="identifier"
+      :data-item-url="'/pictures-map?' + identifier" :data-item-price="120.0" :data-item-image="mockupUrls[0]"
+      :data-item-name="previewLocation">
       add to cart
     </button>
     <a class="snipcart-checkout">
-      <svg
-        height="1em"
-        width="1em"
-        focusable="false"
-        fill="currentColor"
-        viewBox="0 0 24 24"
-        aria-labelledby="your-bag-12731763"
-        role="img"
-        aria-hidden="false"
-      >
+      <svg height="1em" width="1em" focusable="false" fill="currentColor" viewBox="0 0 24 24"
+        aria-labelledby="your-bag-12731763" role="img" aria-hidden="false">
         <title>Your shopping cart</title>
         <path
-          d="M21.193 8.712a2.984 2.984 0 0 0-2.986-2.726h-.952v-.751a5.255 5.255 0 0 0-10.51 0v.75h-.951a2.983 2.983 0 0 0-2.986 2.727L1.715 20.73A2.999 2.999 0 0 0 4.7 24h.005l14.599-.027a2.998 2.998 0 0 0 2.98-3.27L21.193 8.712zM8.246 5.235a3.754 3.754 0 0 1 7.508 0v.75H8.246v-.75zm11.056 17.238-14.599.025h-.002a1.496 1.496 0 0 1-1.49-1.631l1.093-12.02a1.488 1.488 0 0 1 1.49-1.36h.95V9.74a.75.75 0 0 0 1.502 0V7.487h7.508V9.74c0 .415.336.75.75.75h.002a.75.75 0 0 0 .75-.75V7.487h.951a1.49 1.49 0 0 1 1.49 1.361l1.092 11.993a1.496 1.496 0 0 1-1.488 1.632z"
-        ></path>
+          d="M21.193 8.712a2.984 2.984 0 0 0-2.986-2.726h-.952v-.751a5.255 5.255 0 0 0-10.51 0v.75h-.951a2.983 2.983 0 0 0-2.986 2.727L1.715 20.73A2.999 2.999 0 0 0 4.7 24h.005l14.599-.027a2.998 2.998 0 0 0 2.98-3.27L21.193 8.712zM8.246 5.235a3.754 3.754 0 0 1 7.508 0v.75H8.246v-.75zm11.056 17.238-14.599.025h-.002a1.496 1.496 0 0 1-1.49-1.631l1.093-12.02a1.488 1.488 0 0 1 1.49-1.36h.95V9.74a.75.75 0 0 0 1.502 0V7.487h7.508V9.74c0 .415.336.75.75.75h.002a.75.75 0 0 0 .75-.75V7.487h.951a1.49 1.49 0 0 1 1.49 1.361l1.092 11.993a1.496 1.496 0 0 1-1.488 1.632z">
+        </path>
       </svg>
     </a>
     <span class="snipcart-items-count"></span>
@@ -128,6 +93,7 @@ import axios from "axios";
 import VueCookie from "vue-cookies";
 import vars from "../assets/vars";
 import GMap from "../components/myMap.vue";
+import App from "@/App.vue";
 
 export default {
   name: "Map-Site",
@@ -140,7 +106,7 @@ export default {
       mockUpDone: true,
       file: false,
       coordinates: { lat: 53.55, lng: 10, zm: 12 },
-      imageToken: "",
+      imageId: "",
       shopifyToken: ((Date.now() % (4 * 366 * 24 * 60 * 60 * 1000)) * 7)
         .toString(36)
         .toUpperCase(),
@@ -174,7 +140,7 @@ export default {
       this.identifier = window.location.href.match(/\?(\S+)/)[1];
       console.log(this.identifier);
       axios
-        .get(vars.url + "/printful/identifier/" + this.identifier)
+        .get(vars.pixtures + "/printful/identifier/" + this.identifier)
         .then((response) => {
           me.previewUrl = response.data.previewUrl;
           me.previewLocation = response.data.region;
@@ -220,9 +186,8 @@ export default {
 
       document.getElementById("gmap").style.width = Math.round(nw) + "px";
       document.getElementById("gmap").style.height = Math.round(nh) + "px";
-      document.getElementById("gmap").style.transform = `scale(${
-        1 / this.scale
-      }) translate(${tx}px, ${ty}px)`;
+      document.getElementById("gmap").style.transform = `scale(${1 / this.scale
+        }) translate(${tx}px, ${ty}px)`;
     },
     async onFileChange(e) {
       this.uploadDone = false;
@@ -266,9 +231,10 @@ export default {
       var formData = new FormData();
       formData.append("shopifyToken", this.shopifyToken);
       formData.append("file", document.getElementById("file").files[0]);
+      formData.append("userId", App.store["user"]._id);
       var me = this;
       axios
-        .post(vars.url + "/printful/userpicture", formData, {
+        .post(vars.pixtures + "/api/v1/portrait", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -286,7 +252,7 @@ export default {
         })
         .then(function (response) {
           me.uploadDone = true;
-          me.imageToken = response.data.saved;
+          me.imageId = response.data._id;
         })
         .catch(function (error) {
           console.log(error);
@@ -334,30 +300,28 @@ export default {
       var loc = a_tag[0].href;
       var match = loc.match(/\?ll=(-?[.\d]+),(-?[.\d]+)&z=([\d.]+)&/);
       console.log(match);
-      var coordinates = {
+      let coordinates = {
         lat: match[1],
         lng: match[2],
         zm: match[3],
       };
-      var formData = new FormData();
-      for (var i in Object.keys(coordinates)) {
-        var elem = Object.keys(coordinates)[i];
-        formData.append(elem, coordinates[elem]);
-      }
-      formData.append("imageToken", this.imageToken);
+      let body = coordinates;
+      body["userId"] = App.store["user"]._id;
+      body["imageId"] = this.imageId
 
-      var ow = document.getElementById("background").offsetWidth;
-      var oh = document.getElementById("background").offsetHeight;
-      formData.append("width", ow * this.scale);
-      formData.append("height", oh * this.scale);
-      console.log(formData);
+      let ow = document.getElementById("background").offsetWidth;
+      let oh = document.getElementById("background").offsetHeight;
+      body["width"] = ow * this.scale;
+      body["height"] = oh * this.scale;
+      console.log(body);
       this.mockUpDone = false;
       axios
-        .post(vars.url + "/printful/pixtures", formData, {
-          headers: {
-            "Content-Type": "mulipart/form-data",
-          },
-        })
+        .post(vars.pixtures + "/api/v1/generate", body,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
         .then((response) => {
           /*const url = window.URL.createObjectURL(new Blob([response.data]));
           const link = document.createElement("a");
@@ -376,7 +340,7 @@ export default {
       this.status = "Generating Mockups";
       var me = this;
       axios
-        .get(vars.url + "/printful/mockups/" + this.identifier)
+        .get(vars.pixtures + "/api/v1/mockup/" + this.identifier)
         .then((response) => {
           me.mockupUrls = response.data.mockup;
           me.mockUpDone = true;
@@ -390,9 +354,9 @@ export default {
     },
     checkOut() {
       axios
-        .post(vars.url + "/printful/checkout", {
+        .post(vars.pixtures + "/printful/checkout", {
           token: VueCookie.get("session_token"),
-          imageToken: this.imageToken,
+          imageToken: this.imageId,
         })
         .then(alert("order created"));
     },
@@ -408,6 +372,7 @@ export default {
   margin-left: -10px;
   display: flex;
   flex-wrap: wrap;
+
   * {
     width: 100%;
     max-width: 500px;
@@ -448,10 +413,8 @@ button {
 
   #before {
     content: "";
-    background-image: conic-gradient(
-      rgb(255, 255, 255) 20deg,
-      transparent 120deg
-    );
+    background-image: conic-gradient(rgb(255, 255, 255) 20deg,
+        transparent 120deg);
     position: absolute;
     width: 150%;
     height: 150%;
@@ -476,6 +439,7 @@ button {
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(-360deg);
     }
@@ -517,6 +481,7 @@ input#file {
   width: min-content;
   padding: 5px 15px;
   background: #0f476f;
+
   a {
     color: #fff;
   }
@@ -543,6 +508,7 @@ input#file {
 .custom-file-input::-webkit-file-upload-button {
   visibility: hidden;
 }
+
 .custom-file-input::before {
   animation: MoveUpDown 1.5s ease-in-out infinite;
   content: "Select Image";
@@ -558,18 +524,22 @@ input#file {
   font-weight: 700;
   font-size: 14pt;
 }
+
 .custom-file-input:hover::before {
   border-color: black;
 }
+
 .custom-file-input:active::before {
   background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
 }
 
 @keyframes MoveUpDown {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   33% {
     transform: translateX(5px);
   }
@@ -600,9 +570,11 @@ input#file {
   padding: 0;
   width: 100%;
   -webkit-appearance: none;
+
   &:focus {
     outline: none;
   }
+
   &::-webkit-slider-runnable-track {
     width: 100%;
     height: 1px;
@@ -612,6 +584,7 @@ input#file {
     border-radius: 0px;
     border: 0px solid #010101;
   }
+
   &::-moz-range-track {
     width: 100%;
     height: 1px;
@@ -634,6 +607,7 @@ input#file {
     -webkit-appearance: none;
     margin-top: -15px;
   }
+
   &::-moz-range-thumb {
     box-shadow: none;
     border: 0px solid #0f476f;
@@ -646,6 +620,7 @@ input#file {
     -webkit-appearance: none;
     margin-top: -20px;
   }
+
   &::-moz-focus-outer {
     border: 0;
   }
@@ -661,19 +636,19 @@ input#file {
   position: absolute;
   top: 0px;
   left: 0px;
+
   &.special {
-    background-image: repeating-linear-gradient(
-      45deg,
-      transparent 0,
-      transparent 2.828px,
-      #ccc 2.828px,
-      #ccc 5.656px
-    );
+    background-image: repeating-linear-gradient(45deg,
+        transparent 0,
+        transparent 2.828px,
+        #ccc 2.828px,
+        #ccc 5.656px);
     -webkit-background-clip: text;
     color: transparent;
     transition: 0.5s;
   }
 }
+
 #cnbefore {
   z-index: 2;
 
@@ -685,11 +660,13 @@ input#file {
 #cnafter {
   z-index: -1;
 }
+
 #cnWrapper {
   margin-top: 100px;
   position: relative;
   height: 200px;
   width: 100%;
+
   &:hover #cnafter {
     transform: translate(15px, 15px);
   }

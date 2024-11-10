@@ -92,7 +92,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.name == "Flyby" || to.name == "Reset" || to.name == 'Journal' || to.name == 'Pictures-Map') {
+  if (to.name == "Flyby" || to.name == "Reset" || to.name == 'Journal') {
     next()
   } else {
     await axios.post(vars.url + '/token', { token: VueCookie.get('session_token') })
